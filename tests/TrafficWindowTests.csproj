@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="ItemPacketSmoke/**/*.cs" />
+    <Compile Include="../src/TrafficWindow.cs" Link="TrafficWindow.cs" />
+    <Compile Include="../src/ItemValueRules.cs" Link="ItemValueRules.cs" />
+    <Compile Include="../src/HealthValueRules.cs" Link="HealthValueRules.cs" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <AssemblyName>ValheimAnticheat</AssemblyName>
+    <RootNamespace>ValheimAnticheat</RootNamespace>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <Version>0.0.1</Version>
+    <DefaultItemExcludes>$(DefaultItemExcludes);tests/**/bin/**;tests/**/obj/**;tests/bin/**;tests/obj/**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(VALHEIM_PATH)' != ''">
+    <ValheimDir>$(VALHEIM_PATH)</ValheimDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(ValheimDir)' == ''">
+    <ValheimDir>$(HOME)/Library/Application Support/Steam/steamapps/common/Valheim</ValheimDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="Exists('$(ValheimDir)/valheim.app/Contents/Resources/Data/Managed/assembly_valheim.dll')">
+    <GameManagedDir>$(ValheimDir)/valheim.app/Contents/Resources/Data/Managed</GameManagedDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(GameManagedDir)' == '' and Exists('$(ValheimDir)/valheim_server_Data/Managed/assembly_valheim.dll')">
+    <GameManagedDir>$(ValheimDir)/valheim_server_Data/Managed</GameManagedDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(GameManagedDir)' == ''">
+    <GameManagedDir>$(ValheimDir)/valheim_Data/Managed</GameManagedDir>
+  </PropertyGroup>
+
+  <Target Name="CheckValheimReferences" BeforeTargets="ResolveReferences">
+    <Error Condition="!Exists('$(GameManagedDir)/assembly_valheim.dll')" Text="Set VALHEIM_PATH to a Valheim installation containing assembly_valheim.dll." />
+    <Error Condition="!Exists('$(ValheimDir)/BepInEx/core/BepInEx.dll')" Text="Install BepInEx 5 in VALHEIM_PATH before building." />
+  </Target>
+
+  <ItemGroup>
+    <Compile Remove="tests/**/*.cs" />
+    <Reference Include="assembly_valheim"><HintPath>$(GameManagedDir)/assembly_valheim.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="assembly_utils"><HintPath>$(GameManagedDir)/assembly_utils.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(GameManagedDir)/UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine"><HintPath>$(GameManagedDir)/UnityEngine.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="BepInEx"><HintPath>$(ValheimDir)/BepInEx/core/BepInEx.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="0Harmony"><HintPath>$(ValheimDir)/BepInEx/core/0Harmony.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>

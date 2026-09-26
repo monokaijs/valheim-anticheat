@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(VALHEIM_PATH)' != ''">
+    <ValheimDir>$(VALHEIM_PATH)</ValheimDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(ValheimDir)' == ''">
+    <ValheimDir>$(HOME)/Library/Application Support/Steam/steamapps/common/Valheim</ValheimDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="Exists('$(ValheimDir)/valheim.app/Contents/Resources/Data/Managed/assembly_valheim.dll')">
+    <GameManagedDir>$(ValheimDir)/valheim.app/Contents/Resources/Data/Managed</GameManagedDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(GameManagedDir)' == '' and Exists('$(ValheimDir)/valheim_server_Data/Managed/assembly_valheim.dll')">
+    <GameManagedDir>$(ValheimDir)/valheim_server_Data/Managed</GameManagedDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(GameManagedDir)' == ''">
+    <GameManagedDir>$(ValheimDir)/valheim_Data/Managed</GameManagedDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../src/ItemPacketInspector.cs" Link="ItemPacketInspector.cs" />
+    <Compile Include="../../src/ItemValueRules.cs" Link="ItemValueRules.cs" />
+    <Compile Include="../../src/PlayerHealthInspector.cs" Link="PlayerHealthInspector.cs" />
+    <Compile Include="../../src/HealthValueRules.cs" Link="HealthValueRules.cs" />
+    <Compile Include="../../src/DamagePacketInspector.cs" Link="DamagePacketInspector.cs" />
+    <Compile Include="../../src/InventoryOriginTracker.cs" Link="InventoryOriginTracker.cs" />
+    <Reference Include="assembly_valheim"><HintPath>$(GameManagedDir)/assembly_valheim.dll</HintPath></Reference>
+    <Reference Include="assembly_utils"><HintPath>$(GameManagedDir)/assembly_utils.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(GameManagedDir)/UnityEngine.CoreModule.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>

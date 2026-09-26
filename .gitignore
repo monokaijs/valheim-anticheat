@@ -1,0 +1,11 @@
+bin/
+obj/
+dist/
+.DS_Store
+.idea/
+.vs/
+TestResults/
+__pycache__/
+*.pyc
+*.user
+*.suo

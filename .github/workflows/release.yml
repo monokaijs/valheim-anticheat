@@ -1,0 +1,112 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Version to release (current publishes the version already in the source)
+        required: true
+        default: patch
+        type: choice
+        options:
+          - current
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-main
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 7.0.x
+
+      - name: Check release scripts
+        run: python3 -m unittest discover -s tests -p 'test_*.py'
+
+      - name: Select version
+        id: version
+        env:
+          RELEASE_MODE: ${{ inputs.bump }}
+        run: |
+          version="$(python3 scripts/release_version.py "$RELEASE_MODE")"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if git ls-remote --exit-code --tags origin "refs/tags/v$version" >/dev/null; then
+            echo "Version v$version has already been released" >&2
+            exit 1
+          fi
+
+      - name: Install SteamCMD requirements
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lib32gcc-s1
+
+      - name: Download Valheim dedicated server build references
+        run: |
+          mkdir -p "$RUNNER_TEMP/steamcmd" "$RUNNER_TEMP/valheim"
+          curl -fL --retry 3 https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz \
+            | tar -xz -C "$RUNNER_TEMP/steamcmd"
+          "$RUNNER_TEMP/steamcmd/steamcmd.sh" \
+            +force_install_dir "$RUNNER_TEMP/valheim" \
+            +login anonymous +app_update 896660 validate +quit
+          test -f "$RUNNER_TEMP/valheim/valheim_server_Data/Managed/assembly_valheim.dll"
+
+      - name: Download BepInEx 5 build references
+        run: |
+          curl -fL --retry 3 \
+            https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_linux_x64_5.4.23.5.zip \
+            -o "$RUNNER_TEMP/bepinex.zip"
+          unzip -q "$RUNNER_TEMP/bepinex.zip" -d "$RUNNER_TEMP/valheim"
+          test -f "$RUNNER_TEMP/valheim/BepInEx/core/BepInEx.dll"
+
+      - name: Build and test
+        env:
+          VALHEIM_PATH: ${{ runner.temp }}/valheim
+        run: |
+          dotnet build -c Release
+          dotnet run --project tests/TrafficWindowTests.csproj -c Release
+          dotnet run --project tests/ItemPacketSmoke/ItemPacketSmoke.csproj -c Release
+
+      - name: Package release
+        run: python3 scripts/package_release.py
+
+      - name: Commit version and tag
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add ValheimAnticheat.csproj src/AnticheatPlugin.cs
+          if ! git diff --cached --quiet; then
+            git commit -m "Release v$VERSION"
+            git push origin HEAD:main
+          fi
+          git tag -a "v$VERSION" -m "Valheim Anticheat v$VERSION"
+          git push origin "v$VERSION"
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release create "v$VERSION" \
+            "dist/ValheimAnticheat-$VERSION.zip" \
+            assets/icon.png \
+            --title "Valheim Anticheat v$VERSION" \
+            --generate-notes \
+            --verify-tag
