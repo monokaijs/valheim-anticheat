@@ -4,7 +4,7 @@
 
 **A server-first integrity guard for Valheim.** This BepInEx 5 plugin validates client network messages before Valheim accepts them, checks implausible combat and item values, and gives admins evidence about suspicious inventory changes. It runs on a dedicated server or the machine hosting a world. Installing the same DLL on clients enables additional inventory and debug-mode reports.
 
-> [Download the latest GitHub release](https://github.com/monokaijs/valheim-anticheat/releases/latest) · [Review the detection approach](docs/anti-cheat-approaches.md)
+> [Install from Thunderstore](https://thunderstore.io/c/valheim/p/Creaton/ValheimAnticheat/) · [Download the latest GitHub release](https://github.com/monokaijs/valheim-anticheat/releases/latest) · [Review the detection approach](docs/anti-cheat-approaches.md)
 
 ## Install
 
@@ -14,6 +14,8 @@
 4. For carried-inventory and debug-mode reports, install the same DLL on each player's game. Set `RequireClientInventoryScanner = true` only after every player has it.
 
 The server-only checks work without client installation. [BepInEx documents plugin loading](https://docs.bepinex.dev/articles/user_guide/installation/index.html); [Valheim documents dedicated server setup](https://www.valheimgame.com/support/a-guide-to-dedicated-servers/).
+
+Thunderstore users can install [Creaton-ValheimAnticheat](https://thunderstore.io/c/valheim/p/Creaton/ValheimAnticheat/) and its BepInEx dependency through a mod manager.
 
 ## What it enforces
 
