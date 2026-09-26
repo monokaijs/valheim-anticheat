@@ -2,7 +2,7 @@
 schemaVersion = "0.0.1"
 
 [package]
-namespace = "monokaijs"
+namespace = "Creaton"
 name = "ValheimAnticheat"
 versionNumber = "0.0.1"
 description = "Server-first Valheim anti-cheat: protocol, combat, health, and item checks with suspicious import reports."
@@ -24,4 +24,4 @@ target = "./ValheimAnticheat.dll"
 [publish]
 repository = "https://thunderstore.io"
 communities = ["valheim"]
-categories = ["mods", "server-side", "utility"]
+categories = ["mods", "server-side"]
