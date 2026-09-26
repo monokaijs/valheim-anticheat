@@ -4,7 +4,7 @@
 
 **A server-first integrity guard for Valheim.** This BepInEx 5 plugin validates client network messages before Valheim accepts them, checks implausible combat and item values, and gives admins evidence about suspicious inventory changes. It runs on a dedicated server or the machine hosting a world. Installing the same DLL on clients enables additional inventory and debug-mode reports.
 
-> [Download the latest release](https://github.com/monokaijs/valheim-anticheat/releases/latest) · [Review the detection approach](docs/anti-cheat-approaches.md)
+> [Download the latest GitHub release](https://github.com/monokaijs/valheim-anticheat/releases/latest) · [Review the detection approach](docs/anti-cheat-approaches.md)
 
 ## Install
 
@@ -55,7 +55,9 @@ On macOS, the project defaults to `~/Library/Application Support/Steam/steamapps
 
 ## Release a version
 
-In GitHub, open **Actions → Release → Run workflow** on `main`. Select `current` once to publish the version already in the source (`0.0.1` for the first release). Later runs can choose `patch`, `minor`, or `major`; the workflow updates both version declarations, builds and tests against Valheim dedicated-server assemblies, commits the bump, tags it, and publishes a ZIP and icon to GitHub Releases. It downloads Valheim's dedicated-server build through SteamCMD and BepInEx 5 from its official release, so no game assemblies or publishing tokens are stored in this repository.
+In GitHub, open **Actions → Release → Run workflow** on `main`. Select `current` to publish the version already in the source, or `patch`, `minor`, or `major` to bump it. The workflow updates the assembly, plugin, and Thunderstore versions together; builds and tests against Valheim dedicated-server assemblies; commits and tags the version; and publishes a ZIP and icon to GitHub Releases. It then packages the released DLL for Thunderstore and publishes it to the Valheim community using the `THUNDERSTORE_TOKEN` repository secret. Set that secret to a service account token for the team named in `thunderstore.toml` before running a release. No game assemblies or publishing tokens are stored in this repository.
+
+To publish an existing GitHub release to Thunderstore, run **Actions → Publish Thunderstore → Run workflow** with its version number without the `v` prefix. This uses the DLL already attached to that release and does not create another GitHub release. Thunderstore requires a 256×256 icon and a manifest; the package is assembled using `thunderstore.toml` and `assets/thunderstore-icon.png`.
 
 ## Configure
 

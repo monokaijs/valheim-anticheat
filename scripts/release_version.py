@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Keep the assembly and BepInEx plugin versions in sync for manual releases."""
+"""Keep assembly, BepInEx, and Thunderstore versions in sync."""
 
 import argparse
 import re
@@ -10,20 +10,22 @@ PROJECT_VERSION = re.compile(r"(<Version>)(\d+\.\d+\.\d+)(</Version>)")
 PLUGIN_VERSION = re.compile(
     r'(\[BepInPlugin\("dev\.monokaijs\.valheim\.anticheat",\s*"Valheim Anticheat",\s*")(\d+\.\d+\.\d+)("\)\])'
 )
+THUNDERSTORE_VERSION = re.compile(r'(?m)^(versionNumber = ")(\d+\.\d+\.\d+)(")$')
 
 
-def files(root: Path) -> tuple[Path, Path]:
-    return root / "ValheimAnticheat.csproj", root / "src/AnticheatPlugin.cs"
+def files(root: Path) -> tuple[Path, Path, Path]:
+    return root / "ValheimAnticheat.csproj", root / "src/AnticheatPlugin.cs", root / "thunderstore.toml"
 
 
 def read_version(root: Path) -> str:
-    project, plugin = files(root)
+    project, plugin, thunderstore = files(root)
     project_match = PROJECT_VERSION.search(project.read_text())
     plugin_match = PLUGIN_VERSION.search(plugin.read_text())
-    if project_match is None or plugin_match is None:
-        raise ValueError("Could not find both project and plugin versions")
-    if project_match.group(2) != plugin_match.group(2):
-        raise ValueError("Project and plugin versions disagree")
+    thunderstore_match = THUNDERSTORE_VERSION.search(thunderstore.read_text())
+    if project_match is None or plugin_match is None or thunderstore_match is None:
+        raise ValueError("Could not find all release versions")
+    if len({project_match.group(2), plugin_match.group(2), thunderstore_match.group(2)}) != 1:
+        raise ValueError("Project, plugin, and Thunderstore versions disagree")
     return project_match.group(2)
 
 
@@ -44,9 +46,10 @@ def apply_version(root: Path, mode: str) -> str:
     current = read_version(root)
     version = next_version(current, mode)
     if version != current:
-        project, plugin = files(root)
+        project, plugin, thunderstore = files(root)
         project.write_text(PROJECT_VERSION.sub(lambda match: match.group(1) + version + match.group(3), project.read_text(), count=1))
         plugin.write_text(PLUGIN_VERSION.sub(lambda match: match.group(1) + version + match.group(3), plugin.read_text(), count=1))
+        thunderstore.write_text(THUNDERSTORE_VERSION.sub(lambda match: match.group(1) + version + match.group(3), thunderstore.read_text(), count=1))
     return version
 
 

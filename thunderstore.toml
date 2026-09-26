@@ -1,0 +1,27 @@
+[config]
+schemaVersion = "0.0.1"
+
+[package]
+namespace = "monokaijs"
+name = "ValheimAnticheat"
+versionNumber = "0.0.1"
+description = "Server-first Valheim anti-cheat: protocol, combat, health, and item checks with suspicious import reports."
+websiteUrl = "https://github.com/monokaijs/valheim-anticheat"
+containsNsfwContent = false
+
+[package.dependencies]
+denikson-BepInExPack_Valheim = "5.4.2351"
+
+[build]
+icon = "./assets/thunderstore-icon.png"
+readme = "./thunderstore/README.md"
+outdir = "./dist/thunderstore"
+
+[[build.copy]]
+source = "./bin/Release/netstandard2.1/ValheimAnticheat.dll"
+target = "./ValheimAnticheat.dll"
+
+[publish]
+repository = "https://thunderstore.io"
+communities = ["valheim"]
+categories = ["mods", "server-side", "utility"]

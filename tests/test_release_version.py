@@ -12,7 +12,7 @@ class ReleaseVersionTests(unittest.TestCase):
         self.assertEqual(next_version("0.0.1", "minor"), "0.1.0")
         self.assertEqual(next_version("0.0.1", "major"), "1.0.0")
 
-    def test_updates_both_version_sites(self):
+    def test_updates_all_version_sites(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / "src").mkdir()
@@ -20,6 +20,7 @@ class ReleaseVersionTests(unittest.TestCase):
             (root / "src/AnticheatPlugin.cs").write_text(
                 '[BepInPlugin("dev.monokaijs.valheim.anticheat", "Valheim Anticheat", "0.0.1")]\n'
             )
+            (root / "thunderstore.toml").write_text('versionNumber = "0.0.1"\n')
             self.assertEqual(apply_version(root, "minor"), "0.1.0")
             self.assertEqual(read_version(root), "0.1.0")
 

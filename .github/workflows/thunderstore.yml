@@ -1,0 +1,89 @@
+name: Publish Thunderstore
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+    secrets:
+      THUNDERSTORE_TOKEN:
+        required: true
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Existing GitHub release version, without the v prefix
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: thunderstore-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 7.0.x
+
+      - name: Check version and token
+        env:
+          VERSION: ${{ inputs.version }}
+          TCLI_AUTH_TOKEN: ${{ secrets.THUNDERSTORE_TOKEN }}
+        run: |
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo 'Version must use major.minor.patch without a v prefix' >&2
+            exit 1
+          fi
+          if [ -z "$TCLI_AUTH_TOKEN" ]; then
+            echo 'Set the THUNDERSTORE_TOKEN repository secret first' >&2
+            exit 1
+          fi
+
+      - name: Get the released DLL
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/github-release" bin/Release/netstandard2.1
+          gh release download "v$VERSION" \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern "ValheimAnticheat-$VERSION.zip" \
+            --dir "$RUNNER_TEMP/github-release"
+          unzip -p "$RUNNER_TEMP/github-release/ValheimAnticheat-$VERSION.zip" \
+            ValheimAnticheat/ValheimAnticheat.dll \
+            > bin/Release/netstandard2.1/ValheimAnticheat.dll
+          test -s bin/Release/netstandard2.1/ValheimAnticheat.dll
+
+      - name: Install Thunderstore CLI
+        run: dotnet tool install tcli --version 0.2.4 --tool-path "$RUNNER_TEMP/tcli"
+
+      - name: Build Thunderstore package
+        id: package
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          "$RUNNER_TEMP/tcli/tcli" build \
+            --config-path thunderstore.toml \
+            --package-version "$VERSION"
+          package="$(find dist/thunderstore -maxdepth 1 -name "*-ValheimAnticheat-$VERSION.zip" -print -quit)"
+          test -n "$package"
+          unzip -t "$package"
+          echo "file=$package" >> "$GITHUB_OUTPUT"
+
+      - name: Publish to Thunderstore
+        env:
+          TCLI_AUTH_TOKEN: ${{ secrets.THUNDERSTORE_TOKEN }}
+          PACKAGE: ${{ steps.package.outputs.file }}
+        run: |
+          "$RUNNER_TEMP/tcli/tcli" publish \
+            --config-path thunderstore.toml \
+            --file "$PACKAGE"
